@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>title</title>
+    <link rel="stylesheet" href="google-code-prettify/prettify.css">
+    <link rel="stylesheet" href="sons-of-obsidian.css">
+    <script src="google-code-prettify/prettify.js"></script>
+    <style>
+      html, body {
+      margin: 0px;
+      height: 100%;
+      padding: 0px;
+
+background:
+radial-gradient(black 15%, transparent 16%) 0 0,
+radial-gradient(black 15%, transparent 16%) 8px 8px,
+radial-gradient(rgba(255,255,255,.1) 15%, transparent 20%) 0 1px,
+radial-gradient(rgba(255,255,255,.1) 15%, transparent 20%) 8px 9px;
+background-color:#282828;
+background-size:16px 16px;
+      }
+      div.content {
+      width: 800px;
+      margin-left: auto;
+      margin-right: auto;
+      background-color: gray;
+      min-height: 100%;
+      }
+      div.header {
+      margin-bottom: 30px;
+      }
+      pre.prettyprint {
+      border: 2px solid gold;
+      margin: 30px;
+      }
+    </style>
+  </head>
+  <body onload="prettyPrint()">
+    <div class="content">
+    <div class="header">Testing a servlet app</div>
+
+dsfjlasdfkljadshfklsdf
+      <pre class="prettyprint linenums">
+package test;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+@WebServlet("/*")
+public class MyServlet extends HttpServlet {
+
+    private static final long serialVersionUID = 1L;
+
+    List<String> messages = new ArrayList<>();
+
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+        throws ServletException, IOException
+    {
+        for (String message : messages) {
+            response.getOutputStream().println(message);
+        }
+    }
+
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+        throws ServletException, IOException
+    {
+        messages.add(request.getParameter("message"));
+    }
+
+}
+      </pre>
+sdfasdfasd
+ds
+f
+asdf
+asdf
+    </div>
+  </body>
+</html>
