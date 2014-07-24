@@ -12,33 +12,51 @@
       height: 100%;
       padding: 0px;
 
-background:
-radial-gradient(black 15%, transparent 16%) 0 0,
-radial-gradient(black 15%, transparent 16%) 8px 8px,
-radial-gradient(rgba(255,255,255,.1) 15%, transparent 20%) 0 1px,
-radial-gradient(rgba(255,255,255,.1) 15%, transparent 20%) 8px 9px;
-background-color:#282828;
-background-size:16px 16px;
+      /* http://lea.verou.me/css3patterns/#carbon-fibre */
+      background:
+      radial-gradient(black 15%, transparent 16%) 0 0,
+      radial-gradient(black 15%, transparent 16%) 8px 8px,
+      radial-gradient(rgba(255,255,255,.1) 15%, transparent 20%) 0 1px,
+      radial-gradient(rgba(255,255,255,.1) 15%, transparent 20%) 8px 9px;
+      background-color:#282828;
+      background-size:16px 16px;
       }
       div.content {
       width: 800px;
       margin-left: auto;
       margin-right: auto;
+      margin-top: 48px;
       background-color: gray;
       min-height: 100%;
+
+
+      color: white;
+      background: #333538;
+      padding: .5em;
+      border: 0;
+      font-family: Consolas, Monaco, 'Andale Mono', monospace;
+      resize: vertical;
+      box-sizing: border-box;
+      box-shadow: 1px 1px 10px black inset;
+      border-radius: 1px;
       }
       div.header {
+      margin-top: -48px;
+      opacity: .2;
+      color: rgb(255, 255, 134);
+      font-size: 24px;
+      font-weight: bold;
       margin-bottom: 30px;
       }
       pre.prettyprint {
-      border: 2px solid gold;
+      border: 1px solid white;
       margin: 30px;
       }
     </style>
   </head>
   <body onload="prettyPrint()">
     <div class="content">
-    <div class="header">Testing a servlet app</div>
+    <div class="header">TESTING A SERVLET APPLICATION</div>
 
 dsfjlasdfkljadshfklsdf
       <pre class="prettyprint linenums">
