@@ -2,63 +2,110 @@
 <html lang="en">
   <head>
     <meta charset="utf-8">
-    <title>title</title>
+    <title>Servlet testing</title>
     <link rel="stylesheet" href="google-code-prettify/prettify.css">
     <link rel="stylesheet" href="sons-of-obsidian.css">
+    <link rel="stylesheet" href="style.css" type="text/css">
     <script src="google-code-prettify/prettify.js"></script>
-    <style>
-      html, body {
-      margin: 0px;
-      height: 100%;
-      padding: 0px;
-
-      /* http://lea.verou.me/css3patterns/#carbon-fibre */
-      background:
-      radial-gradient(black 15%, transparent 16%) 0 0,
-      radial-gradient(black 15%, transparent 16%) 8px 8px,
-      radial-gradient(rgba(255,255,255,.1) 15%, transparent 20%) 0 1px,
-      radial-gradient(rgba(255,255,255,.1) 15%, transparent 20%) 8px 9px;
-      background-color:#282828;
-      background-size:16px 16px;
-      }
-      div.content {
-      width: 800px;
-      margin-left: auto;
-      margin-right: auto;
-      margin-top: 48px;
-      background-color: gray;
-      min-height: 100%;
-
-
-      color: white;
-      background: #333538;
-      padding: .5em;
-      border: 0;
-      font-family: Consolas, Monaco, 'Andale Mono', monospace;
-      resize: vertical;
-      box-sizing: border-box;
-      box-shadow: 1px 1px 10px black inset;
-      border-radius: 1px;
-      }
-      div.header {
-      margin-top: -48px;
-      opacity: .2;
-      color: rgb(255, 255, 134);
-      font-size: 24px;
-      font-weight: bold;
-      margin-bottom: 30px;
-      }
-      pre.prettyprint {
-      border: 1px solid white;
-      margin: 30px;
-      }
-    </style>
   </head>
   <body onload="prettyPrint()">
     <div class="content">
-    <div class="header">TESTING A SERVLET APPLICATION</div>
+    <div class="header"><h1>INTRODUCTION TO UNIT TESTING</h1></div>
+    <h2>Vad är ett unit test?</h2>
+    <p>Ett unit test är ett stycke kod som bekräftar beteendet hos ett annat stycke kod, det är detta andra stycke kod som kallas "unit". I princip så låter man testet skapa en instans av uniten i fråga, anropa metoder hos den samt bekräfta returvärden eller state changes. Kort och gott så är det en förklaring - eller ett kontrakt - för hur uniten i fråga ska bete sig.</p>
+    <h2>Vad är en unit då?</h2>
+    <p>Vad som utgör en unit är lite diffust. I vissa sammanhang så anser man att en källkodsfil är en unit, i andra sammanhang så anser man att en funktion är en unit. I Java så brukar man säga att en klass är en unit.</p>
+    <h3>Exempel:</h3>
+    <p>Här kommer ett enkelt exempel på ett unit test som bekräftar att meddelandeservicen lagrar meddelanden som förväntat.</p>
+      <pre class="prettyprint linenums">
+import java.util.ArrayList;
+import java.util.List;
 
-dsfjlasdfkljadshfklsdf
+
+public class MessageService {
+
+    private List<String> messages = new ArrayList<>();
+
+    public void addMessage(String message) {
+        messages.add(message);
+    }
+
+    public List<String> getMessages() {
+        return new ArrayList<>(messages);
+    }
+
+}
+      </pre>
+      <pre class="prettyprint linenums">
+public class MessageServiceTest {
+
+    private static final String message = "Hello";
+
+    public static void main(String[] args) {
+        Unit unit = new Unit();
+
+        unit.addMessage(message);
+
+        if(!unit.getMessages().contains(message)) {
+            System.out.println("TEST FAILED");
+        }
+    }
+
+}
+      </pre>
+
+    <h2>Mocks / test doubles</h2>
+    <p>Grundtanken med unit testing är att man testar varje unit isolerat från det övriga systemet. Detta för att snabbt kunna lokalisera fel som uppstår. (Det finns andra test-typer, såsom systemtester eller integrationstester, men denna tutorial handlar om just unit testing.</p>
+    <p>För att uppnå isoleringen i fråga så försöker man i största möjliga mån ersätta beroenden på övriga delar av systemet med hjälp av test doubles, eller mocks. Ett mockobjekt är ett objekt som utger sig för att vara en annan del av systemet utan att föra med sig den komplexitet och de bieffekter som den riktiga versionen har.</p>
+
+    <h3>Exempel:</h3>
+    <p>Detta test ersätter den långsamma och komplexa databasen med en mock för att kunna testa summeringen i sig utan faktiskt bero databasen.</p>
+    <p>Märk hur SumService inte skapar upp databasen själv, utan låter skaparen av SumService-objektet göra det och bara skicka in den. Detta kallas "Dependency Injection" och medför att delar av systemet inte är lika hårt kopplade till varandra, vilket i sin tur gör att det är lättare att byta ut delar i framtiden.</p>
+    <p>Det medför också att det är lättare att testa servicen då man kan skicka in en tillförlitlig test double istället för en riktig databas.</p>
+      <pre class="prettyprint linenums">
+public class SumService {
+
+    private Database db;
+
+    public SumService(Database db) {
+        this.db = db;
+    }
+
+    public int calculateSum() {
+        int sum = 0;
+        for(Integer i : db.getAll()) {
+            sum += i;
+        }
+        return sum;
+    }
+
+}
+      </pre>
+      <pre class="prettyprint linenums">
+import java.util.Arrays;
+import java.util.List;
+
+public class SumServiceTest {
+
+    public static void main(String[] args) {
+        SumService sumService = new SumService(new MockDatabase());
+        if(sumService.calculateSum() != 300) {
+            System.out.println("TEST FAILED");
+        }
+    }
+
+    static class MockDatabase extends Database {
+        @Override
+        public List<Integer> getAll() {
+            return Arrays.asList(100, 100, 100);
+        }
+    }
+
+}
+      </pre>
+
+    <h2>Ett verkligare exempel</h2>
+    <p>Nu ger vi oss på ett lite verkligare exempel, ett unit test av en Servlet.</p>
       <pre class="prettyprint linenums">
 package test;
 
@@ -71,6 +118,7 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+
 
 @WebServlet("/*")
 public class MyServlet extends HttpServlet {
@@ -95,11 +143,682 @@ public class MyServlet extends HttpServlet {
 
 }
       </pre>
-sdfasdfasd
-ds
-f
-asdf
-asdf
+    <p>Vi skapar test doubles för HttpServletRequest samt HttpServletResponse på samma sätt som ovan.<p>
+      <pre class="prettyprint linenums">
+package test;
+
+import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.UnsupportedEncodingException;
+import java.security.Principal;
+import java.util.Collection;
+import java.util.Enumeration;
+import java.util.Locale;
+import java.util.Map;
+
+import javax.servlet.AsyncContext;
+import javax.servlet.DispatcherType;
+import javax.servlet.RequestDispatcher;
+import javax.servlet.ServletContext;
+import javax.servlet.ServletException;
+import javax.servlet.ServletInputStream;
+import javax.servlet.ServletOutputStream;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
+import javax.servlet.WriteListener;
+import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+import javax.servlet.http.HttpUpgradeHandler;
+import javax.servlet.http.Part;
+
+public class MyServletTest {
+
+    private static String SECRET_MESSAGE = "My message";
+
+    public static void main(String[] args) throws Exception {
+        // Create test target
+        MyServlet target = new MyServlet();
+
+        // Prepare for test
+        ByteArrayOutputStream output = new ByteArrayOutputStream();
+        PrintWriter printWriter = new PrintWriter(output);
+        HttpServletRequest testRequest = new TestRequest();
+        TestResponse testResponse = new TestResponse(printWriter);
+
+        target.doPost(testRequest, null);
+        target.doGet(null, testResponse);
+
+        if(!output.toString().contains(SECRET_MESSAGE)) {
+            System.out.println("TEST FAILED");
+        }
+    }
+
+    static class TestRequest implements HttpServletRequest {
+        @Override
+        public String getParameter(String param) {
+            return SECRET_MESSAGE;
+        }
+
+        @Override
+        public AsyncContext getAsyncContext() {
+            return null;
+        }
+
+        @Override
+        public Object getAttribute(String arg0) {
+            return null;
+        }
+
+        @Override
+        public Enumeration<String> getAttributeNames() {
+            return null;
+        }
+
+        @Override
+        public String getCharacterEncoding() {
+            return null;
+        }
+
+        @Override
+        public int getContentLength() {
+            return 0;
+        }
+
+        @Override
+        public long getContentLengthLong() {
+            return 0;
+        }
+
+        @Override
+        public String getContentType() {
+            return null;
+        }
+
+        @Override
+        public DispatcherType getDispatcherType() {
+            return null;
+        }
+
+        @Override
+        public ServletInputStream getInputStream() throws IOException {
+            return null;
+        }
+
+        @Override
+        public String getLocalAddr() {
+            return null;
+        }
+
+        @Override
+        public String getLocalName() {
+            return null;
+        }
+
+        @Override
+        public int getLocalPort() {
+            return 0;
+        }
+
+        @Override
+        public Locale getLocale() {
+            return null;
+        }
+
+        @Override
+        public Enumeration<Locale> getLocales() {
+            return null;
+        }
+
+        @Override
+        public Map<String, String[]> getParameterMap() {
+            return null;
+        }
+
+        @Override
+        public Enumeration<String> getParameterNames() {
+            return null;
+        }
+
+        @Override
+        public String[] getParameterValues(String arg0) {
+            return null;
+        }
+
+        @Override
+        public String getProtocol() {
+            return null;
+        }
+
+        @Override
+        public BufferedReader getReader() throws IOException {
+            return null;
+        }
+
+        @Override
+        public String getRealPath(String arg0) {
+            return null;
+        }
+
+        @Override
+        public String getRemoteAddr() {
+            return null;
+        }
+
+        @Override
+        public String getRemoteHost() {
+            return null;
+        }
+
+        @Override
+        public int getRemotePort() {
+            return 0;
+        }
+
+        @Override
+        public RequestDispatcher getRequestDispatcher(String arg0) {
+            return null;
+        }
+
+        @Override
+        public String getScheme() {
+            return null;
+        }
+
+        @Override
+        public String getServerName() {
+            return null;
+        }
+
+        @Override
+        public int getServerPort() {
+            return 0;
+        }
+
+        @Override
+        public ServletContext getServletContext() {
+            return null;
+        }
+
+        @Override
+        public boolean isAsyncStarted() {
+            return false;
+        }
+
+        @Override
+        public boolean isAsyncSupported() {
+            return false;
+        }
+
+        @Override
+        public boolean isSecure() {
+            return false;
+        }
+
+        @Override
+        public void removeAttribute(String arg0) {
+        }
+
+        @Override
+        public void setAttribute(String arg0, Object arg1) {
+        }
+
+        @Override
+        public void setCharacterEncoding(String arg0) throws UnsupportedEncodingException {
+        }
+
+        @Override
+        public AsyncContext startAsync() throws IllegalStateException {
+            return null;
+        }
+
+        @Override
+        public AsyncContext startAsync(ServletRequest arg0, ServletResponse arg1) throws IllegalStateException {
+            return null;
+        }
+
+        @Override
+        public boolean authenticate(HttpServletResponse arg0) throws IOException, ServletException {
+            return false;
+        }
+
+        @Override
+        public String changeSessionId() {
+            return null;
+        }
+
+        @Override
+        public String getAuthType() {
+            return null;
+        }
+
+        @Override
+        public String getContextPath() {
+            return null;
+        }
+
+        @Override
+        public Cookie[] getCookies() {
+            return null;
+        }
+
+        @Override
+        public long getDateHeader(String arg0) {
+            return 0;
+        }
+
+        @Override
+        public String getHeader(String arg0) {
+            return null;
+        }
+
+        @Override
+        public Enumeration<String> getHeaderNames() {
+            return null;
+        }
+
+        @Override
+        public Enumeration<String> getHeaders(String arg0) {
+            return null;
+        }
+
+        @Override
+        public int getIntHeader(String arg0) {
+            return 0;
+        }
+
+        @Override
+        public String getMethod() {
+            return null;
+        }
+
+        @Override
+        public Part getPart(String arg0) throws IOException, ServletException {
+            return null;
+        }
+
+        @Override
+        public Collection<Part> getParts() throws IOException, ServletException {
+            return null;
+        }
+
+        @Override
+        public String getPathInfo() {
+            return null;
+        }
+
+        @Override
+        public String getPathTranslated() {
+            return null;
+        }
+
+        @Override
+        public String getQueryString() {
+            return null;
+        }
+
+        @Override
+        public String getRemoteUser() {
+            return null;
+        }
+
+        @Override
+        public String getRequestURI() {
+            return null;
+        }
+
+        @Override
+        public StringBuffer getRequestURL() {
+            return null;
+        }
+
+        @Override
+        public String getRequestedSessionId() {
+            return null;
+        }
+
+        @Override
+        public String getServletPath() {
+            return null;
+        }
+
+        @Override
+        public HttpSession getSession() {
+            return null;
+        }
+
+        @Override
+        public HttpSession getSession(boolean arg0) {
+            return null;
+        }
+
+        @Override
+        public Principal getUserPrincipal() {
+            return null;
+        }
+
+        @Override
+        public boolean isRequestedSessionIdFromCookie() {
+            return false;
+        }
+
+        @Override
+        public boolean isRequestedSessionIdFromURL() {
+            return false;
+        }
+
+        @Override
+        public boolean isRequestedSessionIdFromUrl() {
+            return false;
+        }
+
+        @Override
+        public boolean isRequestedSessionIdValid() {
+            return false;
+        }
+
+        @Override
+        public boolean isUserInRole(String arg0) {
+            return false;
+        }
+
+        @Override
+        public void login(String arg0, String arg1) throws ServletException {
+        }
+
+        @Override
+        public void logout() throws ServletException {
+        }
+
+        @Override
+        public <T extends HttpUpgradeHandler> T upgrade(Class<T> arg0) throws IOException, ServletException {
+            return null;
+        }
+    }
+
+    static class TestResponse implements HttpServletResponse {
+
+        private PrintWriter printWriter;
+
+        class TestServletOutputStream extends ServletOutputStream {
+            @Override public boolean isReady() { return false; }
+            @Override public void setWriteListener(WriteListener arg0) { }
+            @Override public void write(int b) throws IOException { }
+            @Override
+            public void println(String s) throws IOException {
+                printWriter.println(s);
+                printWriter.flush();
+            }
+        }
+
+        public TestResponse(PrintWriter printWriter) {
+            this.printWriter = printWriter;
+        }
+
+        @Override
+        public ServletOutputStream getOutputStream() throws IOException {
+            return this.new TestServletOutputStream();
+        }
+
+        @Override
+        public void flushBuffer() throws IOException {
+            // TODO Auto-generated method stub
+
+        }
+
+        @Override
+        public int getBufferSize() {
+            // TODO Auto-generated method stub
+            return 0;
+        }
+
+        @Override
+        public String getCharacterEncoding() {
+            // TODO Auto-generated method stub
+            return null;
+        }
+
+        @Override
+        public String getContentType() {
+            // TODO Auto-generated method stub
+            return null;
+        }
+
+        @Override
+        public Locale getLocale() {
+            // TODO Auto-generated method stub
+            return null;
+        }
+
+        @Override
+        public PrintWriter getWriter() throws IOException {
+            // TODO Auto-generated method stub
+            return null;
+        }
+
+        @Override
+        public boolean isCommitted() {
+            // TODO Auto-generated method stub
+            return false;
+        }
+
+        @Override
+        public void reset() {
+            // TODO Auto-generated method stub
+
+        }
+
+        @Override
+        public void resetBuffer() {
+            // TODO Auto-generated method stub
+
+        }
+
+        @Override
+        public void setBufferSize(int     public void setContentLength(int arg0) {
+            // TODO Auto-generated method stub
+
+        }
+
+        @Override
+        public void setContentLengthLong(long arg0) {
+            // TODO Auto-generated method stub
+
+        }
+
+        @Override
+        public void setContentType(String arg0) {
+            // TODO Auto-generated method stub
+
+        }
+
+        @Override
+        public void setLocale(Locale arg0) {
+            // TODO Auto-generated method stub
+
+        }
+
+        @Override
+        public void addCookie(Cookie arg0) {
+            // TODO Auto-generated method stub
+
+        }
+
+        @Override
+        public void addDateHeader(String arg0, long arg1) {
+            // TODO Auto-generated method stub
+
+        }
+
+        @Override
+        public void addHeader(String arg0, String arg1) {
+            // TODO Auto-geneerride
+        public boolean containsHeader(String arg0) {
+            // TODO Auto-generated method stub
+            return false;
+        }
+
+        @Override
+        public String encodeRedirectURL(String arg0) {
+            // TODO Auto-generated method stub
+            return null;
+        }
+
+        @Override
+        public String encodeRedirectUrl(String arg0) {
+            // TODO Auto-generated method stub
+            return null;
+        }
+
+        @Override
+        public String encode      return null;
+        }
+
+        @Override
+        public Collection<String> getHeaders(String arg0) {
+            // TODO Auto-generated method stub
+            return null;
+        }
+
+        @Override
+        public int getStatus() {
+            // TODO Auto-generated method stub
+            return 0;
+        }
+
+        @Override
+        public void sendError(int arg0) throws IOException {
+            // TODO Auto-generated method stub
+
+        }
+
+        @Override
+        public void sendError(int arg0, String arg1) throws IOException {
+            // TODO Auto-generated method stub
+
+        }
+
+        @Override
+        public void sendRedirect(String ar}
+
+        @Override
+        public void setIntHeader(String arg0, int arg1) {
+            // TODO Auto-generated method stub
+
+        }
+
+        @Override
+        public void setStatus(int arg0) {
+            // TODO Auto-generated method stub
+
+        }
+
+        @Override
+        public void setStatus(int arg0, String arg1) {
+            // TODO Auto-generated method stub
+
+        }
+
+    }
+
+}
+      </pre>
+    <p>Ouch!</p>
+    <p>Även om det är tekniskt lätt att skapa test doubles med hjälp av ett IDE så blir det jävligt grötigt, men tack och lov så finns det färdiga verktyg för att slippa göra test doubles manuellt.</p>
+    <p>Låt oss skriva om testet ovan med hjälp av <a href="https://code.google.com/p/mockito/downloads/detail?name=mockito-all-1.9.5.jar&can=2&q=">Mockito</a></p>
+    <h2>Skapa mockar med Mockito</h2>
+    <p>Mockito låter oss skapa test doubles av godtyckliga klasser eller interface med defaultbeteende för alla metoder. Vi behöver bara specificera de metoder som vi faktiskt är intresserade av för tillfället.</p>
+<p>Mockito.mock(Class) motsvarar "class Mock extends XXX" ovan. Mockito.verify verifierar interaktioner med mockobjektet, och motsvarar ifsatsen med "TEST FAIL" ovan.</p>
+      <pre class="prettyprint linenums">
+package test;
+
+import javax.servlet.ServletOutputStream;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.mockito.Mockito;
+
+public class MyServletTest {
+
+    private static String SECRET_MESSAGE = "My message";
+
+    public static void main(String[] args) throws Exception {
+        MyServlet target = new MyServlet();
+
+        // Prepare for test
+        HttpServletRequest testRequest = Mockito.mock(HttpServletRequest.class);
+        Mockito.when(testRequest.getParameter("message")).thenReturn(SECRET_MESSAGE);
+
+        HttpServletResponse testResponse = Mockito.mock(HttpServletResponse.class);
+        ServletOutputStream os = Mockito.mock(ServletOutputStream.class);
+        Mockito.when(testResponse.getOutputStream()).thenReturn(os);
+
+        target.doPost(testRequest, null);
+        target.doGet(null, testResponse);
+
+        // Verify results. Will throw exception if not called exactly once.
+        Mockito.verify(os, Mockito.times(1)).println(SECRET_MESSAGE);
+    }
+
+}
+</pre>
+      <h2>Att köra testerna</h2>
+      <p>Det går naturligtvis att skriva egna testramverk, som t.ex. ha en main-metod per test och sedan flagga för testfel på något hemkokat sätt. Annars kan man använda sig av industristandarder!</p>
+      <p>Det finns ett antal testramverk, men JUnit är något av en industristandard för att köra tester i Java.</p>
+      <p>Grundtanken med ett JUnit-test är att om inget exception kastas under testets gång så anser JUnit att testet gick bra, och om något exception kastas så anser JUnit att testet gick dåligt. Sedan sköter ramverket sammanställningen av testresultaten.</p>
+      <p>För att skriva och köra JUnit-tester så behöver man använda sig av JUnit, som i sin tur beror på Hamcrest. Se nerladdningssidan <a href="https://github.com/junit-team/junit/wiki/Download-and-Install">här</a>.</p>
+    <h3>Exempel:</h3>
+    <p>Vi skriver om testet från att vara en egen main-metod till att vara ett JUnit-test. Nyare versioner av JUnit använder sig av Annotations för att markera vad som är testmetod och liknanade, men om man råkar på ett äldre JUnit-test så kan det se ut på annat sätt (Tidiga versioner hade conventionen att alla metoder vars namn började på "test" var testmetode).</p>
+    <p>Man brukar namnge metoderna i ett JUnit-test så att namnet säger vad testet förväntar sig.</p>
+    <p>Det finns många Annotations som man kan använda sig av för att skriva JUnit-tester, men de vanligaste är "@Test", "@Before" och "@After". En metod annoterad med "@Test" anses vara en testmetod, och kommer att läggas till statistiken för hur testerna gick. "@Before" och "@After" annoterar metoder som ska köras före och efter varje enskild testmetod. Här kan man lägga gemensamma förberedelser, som t.ex. att skapa upp uniten i fråga.</p>
+      <pre class="prettyprint linenums">
+package test;
+
+import javax.servlet.ServletOutputStream;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.junit.Test;
+import org.mockito.Mockito;
+
+public class MyServletTest {
+
+    private static final String SECRET_MESSAGE = "My message";
+
+    @Test
+    public void shouldPrintPostedMessageToOutstream() throws Exception {
+        MyServlet target = new MyServlet();
+
+        // Prepare for test
+        HttpServletRequest testRequest = Mockito.mock(HttpServletRequest.class);
+        Mockito.when(testRequest.getParameter("message")).thenReturn(SECRET_MESSAGE);
+
+        HttpServletResponse testResponse = Mockito.mock(HttpServletResponse.class);
+        ServletOutputStream os = Mockito.mock(ServletOutputStream.class);
+        Mockito.when(testResponse.getOutputStream()).thenReturn(os);
+
+        target.doPost(testRequest, null);
+        target.doGet(null, testResponse);
+
+        // Verify results. Will throw exception if not called exactly once.
+        Mockito.verify(os, Mockito.times(1)).println(SECRET_MESSAGE);
+    }
+
+}
+</pre>
+      <p>Man kör testerna genom att anropa JUnit-jar:en och skriva med testklassens namn. "java -cp .:/usr/share/java/junit.jar org.junit.runner.JUnitCore test.MyServletTest". Det finns även stöd för att köra testerna från exempelvis Eclipse, eller med byggverktyg som Maven.</p>
+      <img src="eclipse.png">
+      <h2>Men om min klass är svår att isolera då?</h2>
+    <p>Om man har en klass som inte från början var skriven med testning i åtanke, eller av någon annan anledning är svår att isolerea med hjälp av mockar, så finns det några strategier som man kan ta till.</p>
+    <ul>
+      <li>Skriv om klassen så att den är löst kopplad till andra klasser. T.ex. dependency injection (Manuell eller automatiskt).</li>
+      <li>Bryt ut central logik från klassen till sin egen klass och testa den istället.</li>
+      <li>Använd en annan strategi för testning, t.ex. integrationstester.</li>
+      <li>Skit i det. Om det inte är kritisk kod så kan man då och då helt enkelt skita i att skriva automatiska tester på klassen, och fixa den lite då och då när den går sönder och en kund klagar!</li>
+    </ul>
     </div>
   </body>
 </html>
